@@ -9,7 +9,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @Slf4j
-@SpringBootTest     // 1. This is coming from Spring Framework and even if we remove this annotation still it will run as a java file and JUnit is independent of Spring
+// @SpringBootTest     // 1. This is coming from Spring Framework and even if we remove this annotation still it will run as a java file and JUnit is independent of Spring
 class TestingApplicationTests {
 
     @BeforeEach     // 5. This method will run before every single test case
