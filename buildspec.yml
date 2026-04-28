@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  build:
+    commands:
+      - echo Building, Testing and packaging the application... # print this particular string inside the logs
+      - mvn package -DskipTests # 2. it will skip the tests
+      # - mvn package # 1. it will run the package command and also tests
+  post_build:
+    commands:
+      - echo Built, Testing and packaging completed.  # Not that important, it will print this in log after build
+artifacts:
+  files:
+    - target/*.jar  # Next build phase (Deployment phase) will get artifact file from this folder which has .jar extension
+  discard-paths: yes
+cache:
+  paths:
+    - '/root/.m2/**/*'
+
+# There are 3 parts
+# 1. Phases
+# 2. artifacts
+# 3. cache
