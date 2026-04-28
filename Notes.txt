@@ -31,17 +31,150 @@ AWS Code Pipeline :
 
 Steps :
     1. Search for 'Codepipeline' and click on 'Create pipeline'
+        (AWS console me CodePipeline search karo aur 'Create pipeline' pe click karo)
     2. Choose creation option :
         Build custom pipeline
+        (Custom pipeline create karne ka option select karo)
     3. Choose pipeline settings :
         Pipeline settings :
             Pipeline name : "employee-service-pipeline"
+                (Pipeline ka naam do)
             Execution mode or Pipeline type : Queued
-            Service role : New service role,
+                (Pipeline execution mode queued select karo)
+            Service role : New service role
+                (AWS automatically ek naya IAM service role create karega)
             Role name : AWSCodePipelineServiceRole-ap-south-1-employee-service-pipeline
+                (Is role ko CodePipeline services use karegi)
     Next
     4. Add source stage :
         Source :
             Source provider : GitHub (via GitHub App)
-            Connection : give connection name (git-connection)
-            
+                (Source code GitHub repository se fetch hoga)
+            Connection : give connection name (git-connection), and connect the github
+                (GitHub ko AWS ke saath connect karo aur connection name do)
+            Repository name : Select the repository that we want to add to Codepipeline
+                (Jo GitHub repo pipeline me use karna hai wo select karo)
+            Output artifact format : CodePipeline default
+                (CodePipeline default artifact format use karo)
+    Next
+    5. Add build stage (Choose a builder that going to build our project in pipeline)
+        Build :
+            Build provider : AWS Codebuild
+                (Project build karne ke liye AWS CodeBuild service use hogi)
+            Project name : Create project.
+                Project name : spring-build-project
+                    (Build project ka naam)
+                Environment :
+                    Operating system → Amazon Linux
+                        (Build environment Amazon Linux hoga)
+                    Runtime → Standard
+                        (Standard runtime environment use hoga)
+                    Image → aws/codebuild/standard
+                        (AWS ka standard build image use hoga)
+            Service role : New service role
+                (CodeBuild ke liye naya IAM role create hoga)
+            Role name : employee-service-build-project-service-role
+                (Ye role CodeBuild ko required permissions dega)
+            Buildspec :
+                Build specifications : Use a buildspec file
+                    (buildspec.yml file project ke andar rakhenge jisme build commands likhe honge)
+            Continue to Codepipeline
+    Next
+    6. Add test stage (skip)
+        (Test stage abhi skip kar rahe hain)
+    7. Add deploy stage :
+        Deploy :
+            Deploy provider : AWS Elastic Beanstalk
+                (Application deploy karne ke liye Elastic Beanstalk use hoga)
+            Application name : employee-service
+                (Elastic Beanstalk application ka naam)
+            Environment name : Employee-service-envt
+                (Elastic Beanstalk environment ka naam)
+    Next
+    8. Review (Create a pipeline)
+        (Saare configurations review karo aur pipeline create karo)
+
+Now there are 3 stages :
+    1. Source :
+        Pushed code at GitHub will be fetched from here
+        (Jab bhi GitHub repository me code push hoga to CodePipeline yaha se code fetch karega)
+    2. Build :
+        AWS CodeBuild will build the project
+        (AWS CodeBuild yaha project ko build karega aur .jar file generate karega)
+    3. Deploy :
+        Deployed at environment
+        (Build hone ke baad application Elastic Beanstalk environment me deploy ho jayega)
+
+
+Add buildspec.yml :
+    1. We haven't add buildspec.yml file yet in project
+        (Abhi tak project me buildspec.yml file add nahi ki hai)
+    2. add the buildspec.yml file in root folder of our project
+        (Project ke root folder me buildspec.yml file add karo)
+        version: 0.2
+        phases:
+          install:
+            runtime-versions:
+              java: corretto21  # (Build environment me Java Corretto 21 install hoga)
+          build:
+            commands:
+              - echo Building, Testing and packaging the application... # print this particular string inside the logs
+              - mvn package -DskipTests # 2. it will skip the tests
+              # - mvn package # 1. it will run the package command and also tests
+          post_build:
+            commands:
+              - echo Built, Testing and packaging completed.  # Not that important, it will print this in log after build
+        artifacts:
+          files:
+            - target/*.jar  # Next build phase (Deployment phase) will get artifact file from this folder which has .jar extension
+          discard-paths: yes
+        cache:
+          paths:
+            - '/root/.m2/**/*'
+
+        # There are 3 parts
+        # 1. Phases      (install, build, post_build steps define karte hain)
+        # 2. Artifacts   (kaunsi file next stage ko deni hai)
+        # 3. Cache       (dependencies cache karne ke liye)
+    3. Now our pipeline will run again through all the 3 stages of it
+        (Ab pipeline dubara run hogi aur Source → Build → Deploy tino stages execute hongi)
+    4. If somehow deploy stage fails, then go to
+        IAM -> search for our pipeline name (employee-service-pipeline) -> Add permission -> Attach policies -> Search AdministratorAccess-AWSElasticBeanstalk -> mark and add
+    5. Rerun the pipeline again
+
+Adding test cases in project :
+    1. We have added '- mvn package -DskipTests' command so that all the test cases will be skipped during build process
+        (Humne buildspec.yml me '-DskipTests' add kiya tha taaki build ke time test cases run na ho)
+    2. But we have used TestContainers in our test, but we haven't docker instance running on that server for that test container
+        (Lekin tests me TestContainers use kiya hai aur TestContainers ko Docker chahiye hota hai, jo build server me by default enabled nahi hota)
+    3. So we allow the build project to add TestContainers for us
+        (Isliye CodeBuild environment me Docker run karne ki permission deni padti hai)
+    4. Go to one more service of AWS CodeBuild :
+        CodeBuild > Build project > our project (employee-service-build-project)
+        and edit the project > Environment > Additional configurations > Privileged (enable this flag) > Update the project
+        (Privileged flag enable karne se Docker containers build environment me run ho sakte hain)
+       This will allow the docker image to be run the build compute
+       (Ab build server Docker containers run kar sakta hai)
+    5. Go to pipeline and run it
+       (Ab pipeline dubara run karo)
+        (Do check that you main test file should not have @SpringBootTesting annotation otherwise it fails)
+        (Main test file me @SpringBootTest nahi hona chahiye warna DB configuration error aa sakta hai)
+
+    It will run docker as anonymously, so we should give our id and password of docker hub in buildspec.yml file as environment variable
+    (Docker images pull karne ke liye Docker Hub login karna padega)
+
+    6. go to buildspec.yml
+    7. add
+              pre_build:
+                commands:
+                  - echo Logging in to Docker hub...
+                  - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+       before the build
+       (Ye commands build start hone se pehle Docker Hub me login karenge)
+    8. Add value for username and password of docker hub as environment variables
+        go to CodeBuild > Build projects > employee-service-build-project > edit the project > Environment > Additional configurations > Environment variables
+        add username and password there
+        update project
+        (Yaha DOCKER_USERNAME aur DOCKER_PASSWORD environment variables add karna hai)
+    9. Push the project and our pipeline will pick credentials and put that username and password inside EC2 instance and picked by the docker commands
+        (Project push karte hi pipeline run hogi aur CodeBuild automatically environment variables use karke Docker login karega)
