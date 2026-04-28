@@ -7,7 +7,8 @@ phases:
   build:
     commands:
       - echo Building, Testing and packaging the application... # print this particular string inside the logs
-      - mvn package -DskipTests # 2. it will skip the tests
+      - mvn package # 3. This will allow to run test cases with docker image as we have used TestContainers in our testing
+      # - mvn package -DskipTests # 2. it will skip the tests
       # - mvn package # 1. it will run the package command and also tests
   post_build:
     commands:
