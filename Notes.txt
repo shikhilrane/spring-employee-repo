@@ -1,0 +1,47 @@
+AWS Code Pipeline :
+    1. It is an AWS service used to automate the software release process
+       (ye AWS ki service hai jo software deployment process ko automate karne ke liye use hoti hai)
+    2. It helps in Continuous Integration and Continuous Deployment (CI/CD)
+       (ye CI/CD implement karne me help karti hai)
+    3. It automatically builds, tests and deploys code whenever changes are made
+       (jab bhi code me change hota hai to ye automatically build, test aur deploy kar deti hai)
+    4. It connects different AWS services to create a deployment pipeline
+       (ye different AWS services ko connect karke deployment pipeline banati hai)
+    5. It integrates with services like GitHub, CodeCommit, CodeBuild and Elastic Beanstalk
+       (ye GitHub, CodeCommit, CodeBuild aur Elastic Beanstalk jaise services ke saath integrate hoti hai)
+    6. Pipeline works in stages like Source → Build → Deploy
+       (pipeline alag-alag stages me kaam karti hai jaise Source → Build → Deploy)
+    7. Source stage fetches code from repository like GitHub
+       (source stage repository se code fetch karti hai jaise GitHub)
+    8. Build stage compiles the code and creates build artifacts using CodeBuild
+       (build stage code compile karke build artifact banati hai CodeBuild ki help se)
+    9. Deploy stage deploys the application to services like Elastic Beanstalk or EC2
+       (deploy stage application ko Elastic Beanstalk ya EC2 par deploy karti hai)
+    10. It removes the need to manually build and upload jar files
+        (isse manually jar build aur upload karne ki zarurat nahi padti)
+    11. It ensures faster and reliable deployments
+        (ye fast aur reliable deployments ensure karti hai)
+    12. Difference :
+            Without CodePipeline :
+                We have to deploy .jar file manually every time we make changes in our code
+                (jab bhi code me changes karte hain to hume manually jar build karke deploy karna padta hai)
+            With CodePipeline :
+                CodePipeline will automatically source (fetch from github), build and deploy the .jar file whenever we make changes in our code
+                (jab bhi code me changes hote hain to CodePipeline automatically GitHub se code fetch karta hai, .jar build karta hai aur deploy kar deta hai)
+
+Steps :
+    1. Search for 'Codepipeline' and click on 'Create pipeline'
+    2. Choose creation option :
+        Build custom pipeline
+    3. Choose pipeline settings :
+        Pipeline settings :
+            Pipeline name : "employee-service-pipeline"
+            Execution mode or Pipeline type : Queued
+            Service role : New service role,
+            Role name : AWSCodePipelineServiceRole-ap-south-1-employee-service-pipeline
+    Next
+    4. Add source stage :
+        Source :
+            Source provider : GitHub (via GitHub App)
+            Connection : give connection name (git-connection)
+            
